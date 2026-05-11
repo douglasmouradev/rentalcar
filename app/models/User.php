@@ -64,4 +64,34 @@ final class User
         ]);
         return (int) Database::pdo()->lastInsertId();
     }
+
+    public static function emailTakenByOther(string $email, int $excludeUserId): bool
+    {
+        $stmt = Database::pdo()->prepare('SELECT id FROM users WHERE email = ? AND id != ? LIMIT 1');
+        $stmt->execute([$email, $excludeUserId]);
+        return (bool) $stmt->fetch();
+    }
+
+    /**
+     * @param array{name:string,email:string,role:string,phone?:string|null,is_active:int,lang_pref:string,password?:string} $data
+     */
+    public static function update(int $id, array $data): void
+    {
+        $fields = 'name = ?, email = ?, role = ?, phone = ?, is_active = ?, lang_pref = ?';
+        $params = [
+            $data['name'],
+            $data['email'],
+            $data['role'],
+            $data['phone'] ?? null,
+            (int) ($data['is_active'] ?? 1),
+            $data['lang_pref'] ?? 'pt-BR',
+        ];
+        if (!empty($data['password'])) {
+            $fields .= ', password_hash = ?';
+            $params[] = password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]);
+        }
+        $params[] = $id;
+        $sql = 'UPDATE users SET ' . $fields . ' WHERE id = ?';
+        Database::pdo()->prepare($sql)->execute($params);
+    }
 }

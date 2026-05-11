@@ -3,7 +3,10 @@ USE titanium_rental_car;
 -- Senha de demonstração para todos: password123
 INSERT INTO users (name, email, password_hash, role, phone, is_active, lang_pref) VALUES
 ('Carlos Titanium', 'owner@titaniumrental.com', '$2y$12$uu.TgIm3w8Y9tc7Obp1kAOlQRjSOAdH32KW0ce63tG1D3VYScIgxS', 'owner', '(11) 99999-0001', 1, 'pt-BR'),
-('Ana Operadora', 'operator@titaniumrental.com', '$2y$12$uu.TgIm3w8Y9tc7Obp1kAOlQRjSOAdH32KW0ce63tG1D3VYScIgxS', 'operator', '(11) 98888-0002', 1, 'pt-BR');
+('Ana Operadora', 'operator@titaniumrental.com', '$2y$12$uu.TgIm3w8Y9tc7Obp1kAOlQRjSOAdH32KW0ce63tG1D3VYScIgxS', 'operator', '(11) 98888-0002', 1, 'pt-BR'),
+('Cotista Demo', 'partner@titaniumrental.com', '$2y$12$uu.TgIm3w8Y9tc7Obp1kAOlQRjSOAdH32KW0ce63tG1D3VYScIgxS', 'partner', '(11) 97777-0003', 1, 'pt-BR');
+
+INSERT INTO user_cars (user_id, car_id) VALUES (3, 1);
 
 INSERT INTO locations (name, address, city, state, zip_code, phone, is_active) VALUES
 ('Matriz Paulista', 'Av. Paulista, 1000', 'São Paulo', 'SP', '01310-100', '(11) 3000-1000', 1),

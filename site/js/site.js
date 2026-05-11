@@ -59,6 +59,24 @@
     y.textContent = String(new Date().getFullYear());
   }
 
+  // Local de devolução diferente
+  var sameReturn = document.querySelector('input[name="mesmo_local"]');
+  var returnBox = document.getElementById('lp-return-location');
+  if (sameReturn && returnBox) {
+    var syncReturn = function () {
+      var show = !sameReturn.checked;
+      returnBox.classList.toggle('lp-return-location--visible', show);
+      if (!show) {
+        var input = returnBox.querySelector('input');
+        if (input) {
+          input.value = '';
+        }
+      }
+    };
+    sameReturn.addEventListener('change', syncReturn);
+    syncReturn();
+  }
+
   if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     var io = new IntersectionObserver(
       function (entries) {

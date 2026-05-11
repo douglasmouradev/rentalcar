@@ -31,6 +31,18 @@ final class Car
             $params[] = $q;
             $params[] = $q;
         }
+        if (array_key_exists('restrict_to_car_ids', $filters)) {
+            $ids = $filters['restrict_to_car_ids'];
+            if (!is_array($ids) || $ids === []) {
+                $sql .= ' AND 1=0';
+            } else {
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $sql .= ' AND c.id IN (' . $placeholders . ')';
+                foreach ($ids as $cid) {
+                    $params[] = (int) $cid;
+                }
+            }
+        }
         return [$sql, $params];
     }
 

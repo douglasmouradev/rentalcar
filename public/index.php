@@ -5,12 +5,35 @@ declare(strict_types=1);
 define('BASE_PATH', dirname(__DIR__));
 define('APP_PATH', BASE_PATH . '/app');
 
+spl_autoload_register(static function (string $class): void {
+    foreach (['helpers', 'middleware', 'controllers', 'models'] as $dir) {
+        $file = APP_PATH . '/' . $dir . '/' . $class . '.php';
+        if (is_file($file)) {
+            require $file;
+            return;
+        }
+    }
+});
+
 require BASE_PATH . '/app/helpers/Env.php';
 Env::load(BASE_PATH . '/.env');
 
-$appCfg = file_exists(BASE_PATH . '/config/app.php')
-    ? require BASE_PATH . '/config/app.php'
-    : [];
+// Carrega configuração da app depois de Env::load e autoloader disponíveis
+$appCfg = Config::app();
+
+// Validação mínima de ambiente em produção
+if (($appCfg['env'] ?? 'production') === 'production') {
+    $required = ['APP_URL', 'DB_HOST', 'DB_DATABASE', 'DB_USERNAME'];
+    $missing = [];
+    foreach ($required as $name) {
+        if (($_ENV[$name] ?? '') === '') {
+            $missing[] = $name;
+        }
+    }
+    if ($missing !== []) {
+        AppError::log(new RuntimeException('Env vars em falta: ' . implode(', ', $missing)));
+    }
+}
 
 $lifetime = (int) ($appCfg['session_lifetime'] ?? 480) * 60;
 $secure = (bool) ($appCfg['session_secure'] ?? false);
@@ -22,16 +45,6 @@ session_set_cookie_params([
     'samesite' => 'Lax',
 ]);
 session_start();
-
-spl_autoload_register(static function (string $class): void {
-    foreach (['helpers', 'middleware', 'controllers', 'models'] as $dir) {
-        $file = APP_PATH . '/' . $dir . '/' . $class . '.php';
-        if (is_file($file)) {
-            require $file;
-            return;
-        }
-    }
-});
 
 SecurityHeaders::send();
 
@@ -45,7 +58,9 @@ if (isset($_GET['lang']) && in_array($_GET['lang'], ['pt-BR', 'en-US'], true)) {
             Auth::refreshUserFromDb();
         }
     }
-    $back = Auth::check() ? Router::url('/dashboard') : Router::url('/');
+    $back = Auth::check()
+        ? Router::url(Auth::isPartner() ? '/cars' : '/dashboard')
+        : Router::url('/');
     $ref = $_SERVER['HTTP_REFERER'] ?? '';
     $host = parse_url($appCfg['url'] ?? '', PHP_URL_HOST);
     if ($ref !== '' && $host && str_contains($ref, $host)) {

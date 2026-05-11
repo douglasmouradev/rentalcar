@@ -6,7 +6,7 @@ final class LegalController
 {
     public function privacy(): void
     {
-        $cfg = require BASE_PATH . '/config/app.php';
+        $cfg = Config::app();
         View::render('legal.privacy', [
             'title' => Lang::get('legal.privacy_title'),
             'privacy' => $cfg['privacy'] ?? [],

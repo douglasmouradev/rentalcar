@@ -4,6 +4,7 @@ declare(strict_types=1);
 /** @var string $title */
 $flash = Flash::pull();
 $isOwner = Auth::isOwner();
+$isPartner = Auth::isPartner();
 $logged = Auth::check();
 $locale = Lang::locale();
 ?>
@@ -35,9 +36,11 @@ $locale = Lang::locale();
         <nav class="nav">
             <a class="nav-link" href="<?= Router::url('/dashboard') ?>"><?= Lang::e('nav.dashboard') ?></a>
             <a class="nav-link" href="<?= Router::url('/cars') ?>"><?= Lang::e('nav.cars') ?></a>
+            <?php if (!$isPartner): ?>
             <a class="nav-link" href="<?= Router::url('/reservations') ?>"><?= Lang::e('nav.reservations') ?></a>
             <a class="nav-link" href="<?= Router::url('/reservations/calendar') ?>"><?= Lang::e('nav.calendar') ?></a>
             <a class="nav-link" href="<?= Router::url('/customers') ?>"><?= Lang::e('nav.customers') ?></a>
+            <?php endif; ?>
             <?php if ($isOwner): ?>
                 <a class="nav-link" href="<?= Router::url('/locations') ?>"><?= Lang::e('nav.locations') ?></a>
                 <a class="nav-link" href="<?= Router::url('/users') ?>"><?= Lang::e('nav.users') ?></a>

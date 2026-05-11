@@ -16,7 +16,7 @@ final class AppError
 
     public static function render(Throwable $e): void
     {
-        $app = require BASE_PATH . '/config/app.php';
+        $app = Config::app();
         $debug = (bool) ($app['debug'] ?? false);
         http_response_code(500);
         header('Content-Type: text/html; charset=UTF-8');

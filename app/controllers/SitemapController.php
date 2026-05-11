@@ -10,7 +10,7 @@ final class SitemapController
             return;
         }
         header('Content-Type: application/xml; charset=UTF-8');
-        $cfg = require BASE_PATH . '/config/app.php';
+        $cfg = Config::app();
         $origin = rtrim($cfg['url'] . ($cfg['base'] ?? ''), '/');
         $urls = ['/', '/privacidade', '/termos'];
         echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";

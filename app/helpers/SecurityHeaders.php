@@ -17,9 +17,7 @@ final class SecurityHeaders
         header('Referrer-Policy: strict-origin-when-cross-origin');
         header('Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()');
 
-        $app = file_exists(BASE_PATH . '/config/app.php')
-            ? require BASE_PATH . '/config/app.php'
-            : [];
+        $app = Config::app();
         $isProd = ($app['env'] ?? 'production') === 'production' && !($app['debug'] ?? false);
         if ($isProd) {
             header('Strict-Transport-Security: max-age=31536000; includeSubDomains');

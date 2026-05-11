@@ -12,7 +12,7 @@ final class Pagination
 
     public static function perPage(): int
     {
-        $app = require BASE_PATH . '/config/app.php';
+        $app = Config::app();
         $n = (int) ($app['per_page'] ?? 20);
         return max(5, min(100, $n));
     }

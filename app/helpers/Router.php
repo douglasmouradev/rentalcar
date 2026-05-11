@@ -59,13 +59,13 @@ final class Router
 
     public static function basePath(): string
     {
-        $app = require BASE_PATH . '/config/app.php';
+        $app = Config::app();
         return $app['base'] ?? '';
     }
 
     public static function url(string $path = ''): string
     {
-        $app = require BASE_PATH . '/config/app.php';
+        $app = Config::app();
         $base = $app['base'] ?? '';
         $path = $path === '' ? '/' : (str_starts_with($path, '/') ? $path : '/' . $path);
         return $app['url'] . $base . ($path === '/' ? '' : $path);

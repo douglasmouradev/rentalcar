@@ -10,6 +10,37 @@ final class DashboardController
         $isOwner = Auth::isOwner();
         $uid = Auth::id();
 
+        if (Auth::isPartner()) {
+            $ids = Auth::partnerCarIds();
+            $partnerCars = $ids === [] ? [] : Car::search(['restrict_to_car_ids' => $ids]);
+            $partnerActiveRes = 0;
+            if ($ids !== []) {
+                $ph = implode(',', array_fill(0, count($ids), '?'));
+                $st = $pdo->prepare("SELECT COUNT(*) FROM reservations WHERE status = 'active' AND car_id IN ($ph)");
+                $st->execute($ids);
+                $partnerActiveRes = (int) $st->fetchColumn();
+            }
+            View::render('dashboard/index', [
+                'title' => Lang::get('nav.dashboard'),
+                'isOwner' => false,
+                'isPartner' => true,
+                'partnerCars' => $partnerCars,
+                'partnerActiveRes' => $partnerActiveRes,
+                'revenueMonth' => 0.0,
+                'fleet' => 0,
+                'activeRes' => 0,
+                'occupancy' => 0,
+                'unpaid' => 0,
+                'chartDays' => [],
+                'revenueByCategory' => [],
+                'returns' => [],
+                'maintenance' => [],
+                'myToday' => [],
+                'myTodayCount' => 0,
+            ], 'main');
+            return;
+        }
+
         $monthStart = date('Y-m-01');
         $monthEnd = date('Y-m-t');
 
@@ -90,6 +121,9 @@ final class DashboardController
         View::render('dashboard/index', [
             'title' => Lang::get('nav.dashboard'),
             'isOwner' => $isOwner,
+            'isPartner' => false,
+            'partnerCars' => [],
+            'partnerActiveRes' => 0,
             'revenueMonth' => $revenueMonth,
             'fleet' => $fleet,
             'activeRes' => $activeRes,

@@ -1,5 +1,8 @@
 <?php declare(strict_types=1);
 /** @var bool $isOwner */
+/** @var bool $isPartner */
+/** @var array<int,array<string,mixed>> $partnerCars */
+/** @var int $partnerActiveRes */
 /** @var float $revenueMonth */
 /** @var int $fleet */
 /** @var int $activeRes */
@@ -17,7 +20,32 @@ $fmt = static fn (float $v) => 'R$ ' . number_format($v, 2, ',', '.');
     <h1 class="page-title"><?= Lang::e('nav.dashboard') ?></h1>
 </div>
 
-<?php if (!$isOwner): ?>
+<?php if (!empty($isPartner)): ?>
+    <p class="muted"><?= Lang::e('dashboard.partner_intro') ?></p>
+    <div class="grid kpis">
+        <div class="card kpi"><div class="kpi-label"><?= Lang::e('dashboard.partner_my_cars') ?></div><div class="kpi-value"><?= count($partnerCars) ?></div></div>
+        <div class="card kpi"><div class="kpi-label"><?= Lang::e('dashboard.partner_active_res') ?></div><div class="kpi-value"><?= (int) $partnerActiveRes ?></div></div>
+    </div>
+    <div class="card mt">
+        <h2 class="card-title"><?= Lang::e('dashboard.partner_car_list') ?></h2>
+        <div class="table-wrap">
+            <table class="table">
+                <thead><tr><th><?= Lang::e('car.plate') ?></th><th><?= Lang::e('car.model') ?></th><th><?= Lang::e('car.status') ?></th><th></th></tr></thead>
+                <tbody>
+                <?php foreach ($partnerCars as $car): ?>
+                    <tr>
+                        <td class="mono"><?= htmlspecialchars((string) $car['license_plate'], ENT_QUOTES, 'UTF-8') ?></td>
+                        <td><?= htmlspecialchars((string) $car['brand'] . ' ' . (string) $car['model'], ENT_QUOTES, 'UTF-8') ?></td>
+                        <td><?= htmlspecialchars((string) $car['status'], ENT_QUOTES, 'UTF-8') ?></td>
+                        <td><a class="btn btn-sm btn-secondary" href="<?= Router::url('/cars/' . (int) $car['id']) ?>"><?= Lang::e('actions.view') ?></a></td>
+                    </tr>
+                <?php endforeach; ?>
+                <?php if ($partnerCars === []): ?><tr><td colspan="4" class="muted"><?= Lang::e('dashboard.partner_no_cars') ?></td></tr><?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+<?php elseif (!$isOwner): ?>
     <div class="grid kpis">
         <div class="card kpi"><div class="kpi-label"><?= Lang::e('dashboard.operator_today') ?></div><div class="kpi-value"><?= (int) $myTodayCount ?></div></div>
         <div class="card kpi"><div class="kpi-label"><?= Lang::e('dashboard.operator_upcoming') ?></div><div class="kpi-value"><?= count($myToday) ?></div></div>

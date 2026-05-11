@@ -19,10 +19,20 @@ final class LeadController
         $inicio = trim((string) ($_POST['inicio'] ?? ''));
         $fim = trim((string) ($_POST['fim'] ?? ''));
         $mesmo = isset($_POST['mesmo_local']) ? '1' : '0';
+        $localDevolucao = trim((string) ($_POST['local_devolucao'] ?? ''));
 
         if ($local === '' || strlen($local) > 240 || !self::validDate($inicio) || !self::validDate($fim)) {
             header('Location: ' . Router::url('/') . '?lead=erro');
             exit;
+        }
+        if ($mesmo === '0') {
+            if ($localDevolucao === '' || strlen($localDevolucao) > 240) {
+                header('Location: ' . Router::url('/') . '?lead=erro');
+                exit;
+            }
+        } else {
+            // Para leads antigos ou quando não é necessário outro local, normaliza com o mesmo local
+            $localDevolucao = $local;
         }
         if (strcmp($inicio, $fim) > 0) {
             header('Location: ' . Router::url('/') . '?lead=erro');
@@ -39,6 +49,7 @@ final class LeadController
             'inicio' => $inicio,
             'fim' => $fim,
             'mesmo_local' => $mesmo,
+            'local_devolucao' => $localDevolucao,
             'ip_hash' => hash('sha256', (string) ($_SERVER['REMOTE_ADDR'] ?? '')),
         ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . "\n";
         file_put_contents($dir . '/leads.jsonl', $line, FILE_APPEND | LOCK_EX);

@@ -13,7 +13,7 @@ CREATE TABLE users (
   name          VARCHAR(120)        NOT NULL,
   email         VARCHAR(180)        NOT NULL UNIQUE,
   password_hash VARCHAR(255)        NOT NULL,
-  role          ENUM('owner','operator') NOT NULL DEFAULT 'operator',
+  role          ENUM('owner','operator','partner') NOT NULL DEFAULT 'operator',
   phone         VARCHAR(30),
   avatar_url    VARCHAR(255),
   is_active     TINYINT(1)          NOT NULL DEFAULT 1,
@@ -74,6 +74,7 @@ CREATE TABLE customers (
   state         VARCHAR(50),
   zip_code      VARCHAR(15),
   notes         TEXT,
+  attachment_path VARCHAR(255),
   created_by    INT UNSIGNED,
   created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -128,6 +129,16 @@ CREATE INDEX idx_reservations_dates  ON reservations(pickup_date, return_date);
 CREATE INDEX idx_reservations_car    ON reservations(car_id, status);
 CREATE INDEX idx_reservations_status ON reservations(status);
 CREATE INDEX idx_cars_status         ON cars(status);
+
+CREATE TABLE user_cars (
+  user_id    INT UNSIGNED NOT NULL,
+  car_id     INT UNSIGNED NOT NULL,
+  created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, car_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (car_id) REFERENCES cars(id) ON DELETE CASCADE,
+  INDEX idx_user_cars_car (car_id)
+);
 
 CREATE TABLE privacy_login_consent (
   id               INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

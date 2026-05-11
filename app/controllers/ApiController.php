@@ -7,6 +7,8 @@ final class ApiController
     public function customersSearch(): void
     {
         AuthMiddleware::handle();
+        PartnerForbiddenMiddleware::handleJson();
+        ApiRateLimiter::guardJson();
         header('Content-Type: application/json; charset=utf-8');
         $q = (string) ($_GET['q'] ?? '');
         $rows = Customer::searchAutocomplete($q);
@@ -16,6 +18,8 @@ final class ApiController
     public function reservationConflict(): void
     {
         AuthMiddleware::handle();
+        PartnerForbiddenMiddleware::handleJson();
+        ApiRateLimiter::guardJson();
         header('Content-Type: application/json; charset=utf-8');
         $carId = (int) ($_GET['car_id'] ?? 0);
         $pickupDate = (string) ($_GET['pickup_date'] ?? '');
@@ -40,6 +44,8 @@ final class ApiController
     public function calendarEvents(): void
     {
         AuthMiddleware::handle();
+        PartnerForbiddenMiddleware::handleJson();
+        ApiRateLimiter::guardJson();
         header('Content-Type: application/json; charset=utf-8');
         $start = (string) ($_GET['start'] ?? date('Y-m-01'));
         $end = (string) ($_GET['end'] ?? date('Y-m-t'));
@@ -62,6 +68,8 @@ final class ApiController
     public function customersQuickCreate(): void
     {
         AuthMiddleware::handle();
+        PartnerForbiddenMiddleware::handleJson();
+        ApiRateLimiter::guardJson();
         header('Content-Type: application/json; charset=utf-8');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);

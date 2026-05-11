@@ -12,6 +12,9 @@ final class CarController
             'brand' => $_GET['brand'] ?? '',
             'q' => $_GET['q'] ?? '',
         ];
+        if (Auth::isPartner()) {
+            $filters['restrict_to_car_ids'] = Auth::partnerCarIds();
+        }
         $page = Pagination::currentPage();
         $perPage = Pagination::perPage();
         $p = Car::searchPaginated($filters, $page, $perPage);
@@ -36,6 +39,11 @@ final class CarController
         if (!$car) {
             http_response_code(404);
             View::render('errors/404', ['title' => Lang::get('error.404_title')], 'main');
+            return;
+        }
+        if (!Auth::partnerMayViewCar((int) $car['id'])) {
+            http_response_code(403);
+            View::render('errors/403', ['title' => Lang::get('error.403_title')], 'main');
             return;
         }
         View::render('cars/show', ['title' => $car['brand'] . ' ' . $car['model'], 'car' => $car], 'main');
@@ -163,7 +171,7 @@ final class CarController
         if (empty($_FILES[$field]['tmp_name']) || !is_uploaded_file($_FILES[$field]['tmp_name'])) {
             return null;
         }
-        $app = require BASE_PATH . '/config/app.php';
+        $app = Config::app();
         $max = (int) ($app['max_upload'] ?? 5242880);
         if (($_FILES[$field]['size'] ?? 0) > $max) {
             Flash::error(Lang::get('upload.too_large'));

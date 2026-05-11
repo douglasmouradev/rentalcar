@@ -81,6 +81,9 @@
 
   <main id="conteudo">
       <div class="lp-hero-stage">
+        <a class="lp-hero-brand" href="#topo" aria-label="Titanium Rental Car">
+          <img class="lp-hero-brand-logo" src="assets/logo.jpeg" alt="" width="200" height="80" decoding="async" fetchpriority="high">
+        </a>
         <div class="lp-hero-inner">
           <p class="lp-hero-kicker">Sua viagem começa aqui</p>
           <h1 id="lp-hero-title">Aluguel de carros com frota moderna e preço transparente</h1>
@@ -115,6 +118,12 @@
             <input type="checkbox" name="mesmo_local" value="1" checked>
             Devolver no mesmo local
           </label>
+          <div class="lp-return-location" id="lp-return-location">
+            <label class="lp-field lp-field--grow">
+              <span class="lp-label">Local de devolução</span>
+              <input class="lp-input" type="text" name="local_devolucao" autocomplete="address-level2" placeholder="Cidade, bairro ou aeroporto para devolução">
+            </label>
+          </div>
         </form>
       </div>
     </section>

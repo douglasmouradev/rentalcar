@@ -58,13 +58,13 @@ final class Customer
     public static function create(array $d): int
     {
         $stmt = Database::pdo()->prepare(
-            'INSERT INTO customers (type, full_name, document, email, phone, address, city, state, zip_code, notes, created_by)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+            'INSERT INTO customers (type, full_name, document, email, phone, address, city, state, zip_code, notes, attachment_path, created_by)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
         );
         $stmt->execute([
             $d['type'], $d['full_name'], $d['document'], $d['email'] ?: null, $d['phone'],
             $d['address'] ?? null, $d['city'] ?? null, $d['state'] ?? null, $d['zip_code'] ?? null,
-            $d['notes'] ?? null, $d['created_by'] ?? null,
+            $d['notes'] ?? null, $d['attachment_path'] ?? null, $d['created_by'] ?? null,
         ]);
         return (int) Database::pdo()->lastInsertId();
     }
@@ -72,12 +72,12 @@ final class Customer
     public static function update(int $id, array $d): void
     {
         $stmt = Database::pdo()->prepare(
-            'UPDATE customers SET type=?, full_name=?, document=?, email=?, phone=?, address=?, city=?, state=?, zip_code=?, notes=? WHERE id=?'
+            'UPDATE customers SET type=?, full_name=?, document=?, email=?, phone=?, address=?, city=?, state=?, zip_code=?, notes=?, attachment_path=? WHERE id=?'
         );
         $stmt->execute([
             $d['type'], $d['full_name'], $d['document'], $d['email'] ?: null, $d['phone'],
             $d['address'] ?? null, $d['city'] ?? null, $d['state'] ?? null, $d['zip_code'] ?? null,
-            $d['notes'] ?? null, $id,
+            $d['notes'] ?? null, $d['attachment_path'] ?? null, $id,
         ]);
     }
 }

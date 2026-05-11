@@ -14,7 +14,7 @@ final class Lang
         if (!empty($_SESSION['user']['lang_pref'])) {
             return $_SESSION['user']['lang_pref'];
         }
-        $app = require BASE_PATH . '/config/app.php';
+        $app = Config::app();
         return $app['default_lang'];
     }
 

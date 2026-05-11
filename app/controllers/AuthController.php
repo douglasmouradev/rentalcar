@@ -7,7 +7,7 @@ final class AuthController
     public function loginForm(): void
     {
         if (Auth::check()) {
-            header('Location: ' . Router::url('/dashboard'));
+            header('Location: ' . Router::url(Auth::isPartner() ? '/cars' : '/dashboard'));
             exit;
         }
         View::render('auth/login', ['title' => Lang::get('auth.login_title')], 'auth');
@@ -43,7 +43,8 @@ final class AuthController
         Auth::login($user);
         self::logPrivacyConsent((int) $user['id']);
         Flash::success(Lang::get('auth.welcome'));
-        header('Location: ' . Router::url('/dashboard'));
+        $dest = Auth::isPartner() ? '/cars' : '/dashboard';
+        header('Location: ' . Router::url($dest));
         exit;
     }
 

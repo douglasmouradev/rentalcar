@@ -115,6 +115,9 @@ $ogLocale = $locale === 'en-US' ? 'en_US' : 'pt_BR';
     <?php endif; ?>
     <section class="lp-hero" aria-labelledby="lp-hero-title">
       <div class="lp-hero-stage">
+        <a class="lp-hero-brand" href="#topo" aria-label="<?= Lang::e('app.name') ?>">
+          <img class="lp-hero-brand-logo" src="<?= $asset('/assets/img/logo.jpeg') ?>" alt="" width="200" height="80" decoding="async" fetchpriority="high">
+        </a>
         <div class="lp-hero-inner">
           <p class="lp-hero-kicker"><?= Lang::e('landing.hero_kicker') ?></p>
           <h1 id="lp-hero-title"><?= Lang::e('landing.hero_title') ?></h1>
@@ -149,6 +152,12 @@ $ogLocale = $locale === 'en-US' ? 'en_US' : 'pt_BR';
             <input type="checkbox" name="mesmo_local" value="1" checked>
             <?= Lang::e('landing.form_same_return') ?>
           </label>
+          <div class="lp-return-location" id="lp-return-location">
+            <label class="lp-field lp-field--grow">
+              <span class="lp-label"><?= Lang::e('landing.form_return_local_label') ?></span>
+              <input class="lp-input" type="text" name="local_devolucao" maxlength="240" autocomplete="address-level2" placeholder="<?= Lang::e('landing.form_return_local_ph') ?>">
+            </label>
+          </div>
         </form>
       </div>
     </section>

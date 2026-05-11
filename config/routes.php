@@ -50,6 +50,8 @@ return [
     'GET:/users' => ['UserController', 'index', 'auth' => true, 'role' => 'owner'],
     'GET:/users/create' => ['UserController', 'createForm', 'auth' => true, 'role' => 'owner'],
     'POST:/users' => ['UserController', 'create', 'auth' => true, 'role' => 'owner'],
+    'GET:/users/{id}/edit' => ['UserController', 'editForm', 'auth' => true, 'role' => 'owner'],
+    'POST:/users/{id}/update' => ['UserController', 'update', 'auth' => true, 'role' => 'owner'],
 
     'GET:/reports' => ['ReportController', 'index', 'auth' => true, 'role' => 'owner'],
     'GET:/reports/export' => ['ReportController', 'exportCsv', 'auth' => true, 'role' => 'owner'],

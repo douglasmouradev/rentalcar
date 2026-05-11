@@ -22,8 +22,14 @@ $locale = Lang::locale();
     <aside class="auth-aside" aria-label="<?= Lang::e('app.name') ?>">
         <div class="auth-aside-glow" aria-hidden="true"></div>
         <div class="auth-aside-grid" aria-hidden="true"></div>
+        <div class="auth-aside-logo-wrap">
+            <div class="auth-aside-logo-panel">
+                <a class="auth-aside-brand" href="<?= htmlspecialchars(Router::url('/'), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= Lang::e('app.name') ?>">
+                    <img class="auth-aside-logo" src="<?= htmlspecialchars(Router::url('/assets/img/logo.jpeg'), ENT_QUOTES, 'UTF-8') ?>" alt="<?= Lang::e('app.name') ?>" width="720" height="288" decoding="async" fetchpriority="high">
+                </a>
+            </div>
+        </div>
         <div class="auth-aside-content">
-            <p class="auth-aside-kicker"><?= Lang::e('app.name') ?></p>
             <p class="auth-aside-headline"><?= Lang::e('auth.aside_headline') ?></p>
             <p class="auth-aside-tagline"><?= Lang::e('app.tagline') ?></p>
         </div>

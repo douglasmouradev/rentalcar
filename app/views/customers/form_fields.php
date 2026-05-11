@@ -28,3 +28,15 @@
 <input class="input" name="zip_code" value="<?= htmlspecialchars((string) ($c['zip_code'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
 <label class="label"><?= Lang::e('reservation.notes') ?></label>
 <textarea class="input" name="notes" rows="2"><?= htmlspecialchars((string) ($c['notes'] ?? ''), ENT_QUOTES, 'UTF-8') ?></textarea>
+
+<div class="field-group">
+    <label class="label" for="customer-attachment"><?= Lang::e('customer.attachment') ?></label>
+    <input class="input" id="customer-attachment" type="file" name="attachment" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.heic,.heif">
+    <?php if (!empty($c['attachment_path'])): ?>
+        <p class="help-text">
+            <a href="<?= htmlspecialchars((string) $c['attachment_path'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">
+                <?= Lang::e('customer.attachment_view') ?>
+            </a>
+        </p>
+    <?php endif; ?>
+</div>

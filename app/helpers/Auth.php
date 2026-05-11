@@ -29,15 +29,35 @@ final class Auth
         return self::role() === 'owner';
     }
 
+    public static function isPartner(): bool
+    {
+        return self::role() === 'partner';
+    }
+
+    /** @return array<int, int> */
+    public static function partnerCarIds(): array
+    {
+        $ids = $_SESSION['user']['car_ids'] ?? [];
+        if (!is_array($ids)) {
+            return [];
+        }
+        return array_values(array_map('intval', $ids));
+    }
+
     public static function login(array $user): void
     {
         session_regenerate_id(true);
+        $carIds = [];
+        if (($user['role'] ?? '') === 'partner') {
+            $carIds = UserCar::carIdsForUser((int) $user['id']);
+        }
         $_SESSION['user'] = [
             'id' => (int) $user['id'],
             'name' => $user['name'],
             'email' => $user['email'],
             'role' => $user['role'],
             'lang_pref' => $user['lang_pref'] ?? 'pt-BR',
+            'car_ids' => $carIds,
         ];
         if (!empty($_SESSION['lang'])) {
             return;
@@ -67,5 +87,13 @@ final class Auth
         if ($row) {
             self::login($row);
         }
+    }
+
+    public static function partnerMayViewCar(int $carId): bool
+    {
+        if (!self::isPartner()) {
+            return true;
+        }
+        return in_array($carId, self::partnerCarIds(), true);
     }
 }

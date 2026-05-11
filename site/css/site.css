@@ -18,7 +18,7 @@
   --shadow-sm: 0 4px 14px rgba(15, 23, 42, 0.08);
   --font-sans: "IBM Plex Sans", system-ui, sans-serif;
   --font-serif: "IBM Plex Serif", Georgia, serif;
-  --hero-img: url("https://images.unsplash.com/photo-1449965408869-eaa3f117e661?auto=format&fit=crop&w=2400&q=85");
+  --hero-img: url("../assets/hero-grid-bg.png");
 }
 
 *,
@@ -471,11 +471,34 @@ a:hover {
 }
 
 .lp-hero-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(1rem, 3vw, 1.75rem);
   padding: clamp(2.5rem, 8vw, 4.5rem) clamp(1rem, 4vw, 2.5rem) clamp(7rem, 14vw, 9rem);
   background:
-    linear-gradient(100deg, rgba(11, 18, 32, 0.92) 0%, rgba(26, 58, 108, 0.72) 42%, rgba(11, 18, 32, 0.55) 100%),
-    var(--hero-img) center 70% / cover no-repeat;
+    linear-gradient(100deg, rgba(11, 18, 32, 0.9) 0%, rgba(15, 36, 70, 0.55) 48%, rgba(11, 18, 32, 0.45) 100%),
+    radial-gradient(ellipse 80% 70% at 50% 40%, rgba(26, 58, 108, 0.25) 0%, transparent 55%),
+    var(--hero-img) center / cover no-repeat;
   color: #fff;
+}
+
+.lp-hero-brand {
+  display: block;
+  line-height: 0;
+  flex-shrink: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.lp-hero-brand-logo {
+  display: block;
+  width: auto;
+  height: clamp(2.75rem, 8.5vmin, 4.5rem);
+  max-width: min(200px, 40vw);
+  object-fit: contain;
+  object-position: left center;
+  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.4));
 }
 
 .lp-hero-inner {
@@ -537,6 +560,15 @@ a:hover {
   font-size: 0.8125rem;
   color: var(--ink-soft);
   line-height: 1.45;
+}
+
+.lp-return-location {
+  display: none;
+  margin-top: 0.5rem;
+}
+
+.lp-return-location--visible {
+  display: block;
 }
 
 .lp-lead-banner {

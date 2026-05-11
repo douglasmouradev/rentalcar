@@ -10,7 +10,7 @@ final class RobotsController
             return;
         }
         header('Content-Type: text/plain; charset=UTF-8');
-        $cfg = require BASE_PATH . '/config/app.php';
+        $cfg = Config::app();
         $origin = rtrim($cfg['url'] . ($cfg['base'] ?? ''), '/');
         $sitemap = $origin . '/sitemap.xml';
         echo "User-agent: *\n";
