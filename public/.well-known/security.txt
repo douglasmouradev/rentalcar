@@ -1,0 +1,6 @@
+Contact: mailto:security@example.com
+Expires: 2027-12-31T23:59:59.000Z
+Preferred-Languages: pt, en
+
+# Substitua security@example.com pelo contacto da sua equipa.
+# Mais informações: https://securitytxt.org/

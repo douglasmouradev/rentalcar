@@ -1,0 +1,3 @@
+-- Migration 001 — espelha schema inicial (referência versionada)
+-- Aplicar: mysql -u root -p titanium_rental_car < database/schema.sql
+-- Este arquivo documenta a versão base; alterações futuras em 002_*.sql
