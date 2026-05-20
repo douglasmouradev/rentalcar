@@ -12,6 +12,20 @@ $locale = Lang::locale();
 $htmlLang = str_replace('_', '-', $locale);
 $metaDesc = Lang::get('landing.meta_description');
 $ogLocale = $locale === 'en-US' ? 'en_US' : 'pt_BR';
+$henMarquee = static function (string $langKey): string {
+    $raw = Lang::get($langKey);
+    $items = array_filter(array_map('trim', explode(',', $raw)));
+    if ($items === []) {
+        return '';
+    }
+    $chunks = [];
+    foreach ([0, 1] as $_dup) {
+        foreach ($items as $item) {
+            $chunks[] = '<span>' . htmlspecialchars($item, ENT_QUOTES, 'UTF-8') . '</span>';
+        }
+    }
+    return implode('', $chunks);
+};
 ?><!DOCTYPE html>
 <html lang="<?= htmlspecialchars($htmlLang, ENT_QUOTES, 'UTF-8') ?>" data-app-origin="<?= htmlspecialchars($appRoot, ENT_QUOTES, 'UTF-8') ?>">
 <head>
@@ -78,29 +92,32 @@ $ogLocale = $locale === 'en-US' ? 'en_US' : 'pt_BR';
     </div>
   </div>
 
-  <section class="lp-scroll-zoom" aria-hidden="true">
-    <p class="visually-hidden"><?= Lang::e('landing.opener_ref') ?></p>
-    <div class="lp-scroll-zoom-track">
-      <div class="lp-stuck-grid">
-        <div class="lp-opener-cell"><?= Lang::e('landing.opener_t1') ?></div>
-        <div class="lp-opener-cell"><?= Lang::e('landing.opener_t2') ?></div>
-        <div class="lp-opener-cell"><?= Lang::e('landing.opener_t3') ?></div>
-        <div class="lp-opener-cell"><?= Lang::e('landing.opener_t4') ?></div>
-        <div class="lp-opener-cell"><?= Lang::e('landing.opener_t5') ?></div>
-        <div class="lp-opener-cell lp-opener-cell--center">
-          <b><?= Lang::e('landing.opener_center') ?></b>
-          <span class="lp-opener-cell-sub"><?= Lang::e('landing.opener_center_sub') ?></span>
+  <div class="lp-hen-progress" id="lp-hen-progress" aria-hidden="true"><span class="lp-hen-progress-fill"></span></div>
+
+  <section class="lp-hen-intro" id="lp-hen-intro" aria-labelledby="lp-hen-headline">
+    <p class="visually-hidden"><?= Lang::e('landing.hen_ref') ?></p>
+    <div class="lp-hen-intro-track">
+      <div class="lp-hen-intro-sticky">
+        <div class="lp-hen-marquee lp-hen-marquee--top" aria-hidden="true">
+          <div class="lp-hen-marquee-inner"><?= $henMarquee('landing.hen_marquee_row1') ?></div>
         </div>
-        <div class="lp-opener-cell"><?= Lang::e('landing.opener_t6') ?></div>
-        <div class="lp-opener-cell"><?= Lang::e('landing.opener_t7') ?></div>
-        <div class="lp-opener-cell"><?= Lang::e('landing.opener_t8') ?></div>
-        <div class="lp-opener-cell"><?= Lang::e('landing.opener_t9') ?></div>
-        <div class="lp-opener-cell"><?= Lang::e('landing.opener_t10') ?></div>
-        <div class="lp-opener-cell"><?= Lang::e('landing.opener_t11') ?></div>
-        <div class="lp-opener-cell"><?= Lang::e('landing.opener_t12') ?></div>
-        <div class="lp-opener-cell"><?= Lang::e('landing.opener_t13') ?></div>
-        <div class="lp-opener-cell"><?= Lang::e('landing.opener_t14') ?></div>
-        <div class="lp-opener-cell"><?= Lang::e('landing.opener_t15') ?></div>
+        <div class="lp-hen-marquee lp-hen-marquee--mid" aria-hidden="true">
+          <div class="lp-hen-marquee-inner"><?= $henMarquee('landing.hen_marquee_row2') ?></div>
+        </div>
+        <div class="lp-hen-hero-copy">
+          <h2 id="lp-hen-headline" class="lp-hen-headline">
+            <span class="lp-hen-line"><?= Lang::e('landing.hen_line_1') ?></span>
+            <span class="lp-hen-line lp-hen-line--accent"><?= Lang::e('landing.hen_line_2') ?></span>
+          </h2>
+          <p class="lp-hen-brand">
+            <span class="lp-hen-brand-name"><?= Lang::e('landing.opener_center') ?></span>
+            <span class="lp-hen-brand-sub"><?= Lang::e('landing.opener_center_sub') ?></span>
+          </p>
+        </div>
+        <div class="lp-hen-marquee lp-hen-marquee--bot" aria-hidden="true">
+          <div class="lp-hen-marquee-inner"><?= $henMarquee('landing.hen_marquee_row3') ?></div>
+        </div>
+        <p class="lp-hen-scroll-cue" aria-hidden="true"><?= Lang::e('landing.hen_scroll_cue') ?></p>
       </div>
     </div>
   </section>
@@ -204,8 +221,8 @@ $ogLocale = $locale === 'en-US' ? 'en_US' : 'pt_BR';
     </section>
 
     <section class="lp-section lp-section--wide" id="frota" data-reveal>
-      <header class="lp-section-head">
-        <h2><?= Lang::e('landing.fleet_title') ?></h2>
+      <header class="lp-section-head" data-hen-parallax>
+        <h2 data-hen-split><?= Lang::e('landing.fleet_title') ?></h2>
         <p><?= Lang::e('landing.fleet_lead') ?></p>
       </header>
       <div class="lp-fleet-toolbar">
@@ -328,8 +345,8 @@ $ogLocale = $locale === 'en-US' ? 'en_US' : 'pt_BR';
 
     <section class="lp-section lp-section--muted" id="vantagens" data-reveal>
       <div class="lp-section--wide lp-split">
-        <header class="lp-section-head">
-          <h2><?= Lang::e('landing.adv_title') ?></h2>
+        <header class="lp-section-head" data-hen-parallax>
+          <h2 data-hen-split><?= Lang::e('landing.adv_title') ?></h2>
           <p><?= Lang::e('landing.adv_lead') ?></p>
         </header>
         <ul class="lp-benefits">
@@ -342,8 +359,8 @@ $ogLocale = $locale === 'en-US' ? 'en_US' : 'pt_BR';
     </section>
 
     <section class="lp-section lp-section--wide" id="como-funciona" data-reveal>
-      <header class="lp-section-head">
-        <h2><?= Lang::e('landing.steps_title') ?></h2>
+      <header class="lp-section-head" data-hen-parallax>
+        <h2 data-hen-split><?= Lang::e('landing.steps_title') ?></h2>
         <p><?= Lang::e('landing.steps_lead') ?></p>
       </header>
       <ol class="lp-steps">
@@ -372,8 +389,8 @@ $ogLocale = $locale === 'en-US' ? 'en_US' : 'pt_BR';
     </section>
 
     <section class="lp-section lp-section--wide" id="faq" data-reveal>
-      <header class="lp-section-head">
-        <h2><?= Lang::e('landing.faq_title') ?></h2>
+      <header class="lp-section-head" data-hen-parallax>
+        <h2 data-hen-split><?= Lang::e('landing.faq_title') ?></h2>
       </header>
       <div class="lp-faq">
         <details class="lp-faq-item">
@@ -444,6 +461,7 @@ $ogLocale = $locale === 'en-US' ? 'en_US' : 'pt_BR';
   <?php include APP_PATH . '/views/partials/cookie_notice.php'; ?>
   <script src="<?= $asset('/js/lang-switcher.js') ?>" defer></script>
   <script src="<?= $asset('/js/cookie-notice.js') ?>" defer></script>
+  <script src="<?= $asset('/landing/js/scroll-hen.js') ?>" defer></script>
   <script src="<?= $asset('/landing/js/site.js') ?>" defer></script>
 </body>
 </html>

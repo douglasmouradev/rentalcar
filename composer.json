@@ -6,10 +6,13 @@
     "php": ">=8.3"
   },
   "require-dev": {
-    "phpunit/phpunit": "^11.3"
+    "phpunit/phpunit": "^11.3",
+    "phpstan/phpstan": "^2.0"
   },
   "scripts": {
-    "test": "phpunit"
+    "test": "phpunit",
+    "migrate": "php bin/migrate.php",
+    "phpstan": "phpstan analyse --configuration=phpstan.neon"
   },
   "config": {
     "sort-packages": true

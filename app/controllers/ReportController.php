@@ -19,7 +19,7 @@ final class ReportController
         $monthly = $stmt->fetchAll();
 
         $fleet = $pdo->query(
-            "SELECT status, COUNT(*) AS c FROM cars GROUP BY status"
+            "SELECT status, COUNT(*) AS c FROM cars WHERE deleted_at IS NULL GROUP BY status"
         )->fetchAll();
 
         View::render('reports/index', [

@@ -73,7 +73,15 @@ final class Router
 
     private static function patternToRegex(string $pattern): string
     {
-        $pattern = preg_replace('#\{([a-zA-Z_]+)\}#', '(?P<$1>[^/]+)', $pattern);
-        return '#^' . $pattern . '$#';
+        $parts = preg_split('#(\{[a-zA-Z_]+\})#', $pattern, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $regex = '';
+        foreach ($parts as $part) {
+            if (preg_match('#^\{([a-zA-Z_]+)\}$#', $part, $m)) {
+                $regex .= '(?P<' . $m[1] . '>[^/]+)';
+            } else {
+                $regex .= preg_quote($part, '#');
+            }
+        }
+        return '#^' . $regex . '$#';
     }
 }

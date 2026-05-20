@@ -10,5 +10,6 @@ final class AuthMiddleware
             header('Location: ' . Router::url('/login'));
             exit;
         }
+        Auth::ensureActive();
     }
 }

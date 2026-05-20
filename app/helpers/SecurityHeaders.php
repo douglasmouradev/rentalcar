@@ -23,13 +23,14 @@ final class SecurityHeaders
             header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
         }
 
+        $nonce = CspNonce::get();
         $csp = [
             "default-src 'self'",
             "base-uri 'self'",
             "form-action 'self'",
             "frame-ancestors 'self'",
             "object-src 'none'",
-            "script-src 'self' 'unsafe-inline'",
+            "script-src 'self' 'nonce-{$nonce}'",
             "style-src 'self' https://fonts.googleapis.com 'unsafe-inline'",
             "font-src 'self' https://fonts.gstatic.com data:",
             "img-src 'self' data: https://images.unsplash.com https:",

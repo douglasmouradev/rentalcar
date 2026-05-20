@@ -4,8 +4,26 @@
     <div class="page-actions">
         <a class="btn btn-secondary" href="<?= Router::url('/reservations') ?>"><?= Lang::e('actions.back') ?></a>
         <a class="btn btn-primary" href="<?= Router::url('/reservations/' . (int) $r['id'] . '/edit') ?>"><?= Lang::e('actions.edit') ?></a>
-        <?php if ($r['status'] !== 'cancelled' && $r['status'] !== 'completed'): ?>
-            <form method="post" action="<?= Router::url('/reservations/' . (int) $r['id'] . '/cancel') ?>" class="inline-form" onsubmit="return confirm('OK?');">
+        <?php if ($r['status'] === 'pending'): ?>
+            <form method="post" action="<?= Router::url('/reservations/' . (int) $r['id'] . '/confirm') ?>" class="inline-form">
+                <?= Csrf::field() ?>
+                <button type="submit" class="btn btn-secondary"><?= Lang::e('reservation.confirm_btn') ?></button>
+            </form>
+        <?php endif; ?>
+        <?php if ($r['status'] === 'confirmed'): ?>
+            <form method="post" action="<?= Router::url('/reservations/' . (int) $r['id'] . '/activate') ?>" class="inline-form">
+                <?= Csrf::field() ?>
+                <button type="submit" class="btn btn-secondary"><?= Lang::e('reservation.activate_btn') ?></button>
+            </form>
+        <?php endif; ?>
+        <?php if ($r['status'] === 'active'): ?>
+            <form method="post" action="<?= Router::url('/reservations/' . (int) $r['id'] . '/complete') ?>" class="inline-form">
+                <?= Csrf::field() ?>
+                <button type="submit" class="btn btn-primary"><?= Lang::e('reservation.complete_btn') ?></button>
+            </form>
+        <?php endif; ?>
+        <?php if (!in_array($r['status'], ['cancelled', 'completed'], true)): ?>
+            <form method="post" action="<?= Router::url('/reservations/' . (int) $r['id'] . '/cancel') ?>" class="inline-form" onsubmit="return confirm('<?= Lang::e('reservation.cancel_confirm') ?>');">
                 <?= Csrf::field() ?>
                 <button type="submit" class="btn btn-danger"><?= Lang::e('reservation.cancel_btn') ?></button>
             </form>
@@ -28,6 +46,10 @@
             <dd><?= htmlspecialchars($r['pickup_date'] . ' ' . substr((string) $r['pickup_time'], 0, 5), ENT_QUOTES, 'UTF-8') ?> — <?= htmlspecialchars($r['pickup_location_name'], ENT_QUOTES, 'UTF-8') ?></dd>
             <dt><?= Lang::e('reservation.return') ?></dt>
             <dd><?= htmlspecialchars($r['return_date'] . ' ' . substr((string) $r['return_time'], 0, 5), ENT_QUOTES, 'UTF-8') ?> — <?= htmlspecialchars($r['return_location_name'], ENT_QUOTES, 'UTF-8') ?></dd>
+            <?php if (!empty($r['actual_return_at'])): ?>
+                <dt><?= Lang::e('reservation.actual_return') ?></dt>
+                <dd class="mono"><?= htmlspecialchars((string) $r['actual_return_at'], ENT_QUOTES, 'UTF-8') ?></dd>
+            <?php endif; ?>
             <dt><?= Lang::e('reservation.status') ?></dt>
             <dd><span class="badge st-<?= htmlspecialchars($r['status'], ENT_QUOTES, 'UTF-8') ?>"><?= Lang::e('status.' . $r['status']) ?></span></dd>
             <dt><?= Lang::e('reservation.payment') ?></dt>

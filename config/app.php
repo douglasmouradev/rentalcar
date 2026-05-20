@@ -2,9 +2,16 @@
 
 declare(strict_types=1);
 
+$url = rtrim($_ENV['APP_URL'] ?? 'http://localhost', '/');
+// Em desenvolvimento, usa o host/porta do pedido atual (ex.: :8000 vs :8888).
+if (($_ENV['APP_ENV'] ?? 'production') === 'development' && !empty($_SERVER['HTTP_HOST'])) {
+    $https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+    $url = ($https ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+}
+
 return [
     'name' => $_ENV['APP_NAME'] ?? 'Titanium Rental Car',
-    'url' => rtrim($_ENV['APP_URL'] ?? 'http://localhost', '/'),
+    'url' => $url,
     'base' => rtrim($_ENV['APP_BASE'] ?? '', '/'),
     'env' => $_ENV['APP_ENV'] ?? 'production',
     'debug' => filter_var($_ENV['APP_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN),

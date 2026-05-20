@@ -1,12 +1,11 @@
 USE titanium_rental_car;
 
--- Senha de demonstração para todos: password123
+-- ATENÇÃO: dados de DEMONSTRAÇÃO — NÃO execute em produção.
+-- Senhas conhecidas abaixo; use apenas em desenvolvimento/CI.
 INSERT INTO users (name, email, password_hash, role, phone, is_active, lang_pref) VALUES
 ('Carlos Titanium', 'owner@titaniumrental.com', '$2y$12$uu.TgIm3w8Y9tc7Obp1kAOlQRjSOAdH32KW0ce63tG1D3VYScIgxS', 'owner', '(11) 99999-0001', 1, 'pt-BR'),
 ('Ana Operadora', 'operator@titaniumrental.com', '$2y$12$uu.TgIm3w8Y9tc7Obp1kAOlQRjSOAdH32KW0ce63tG1D3VYScIgxS', 'operator', '(11) 98888-0002', 1, 'pt-BR'),
 ('Cotista Demo', 'partner@titaniumrental.com', '$2y$12$uu.TgIm3w8Y9tc7Obp1kAOlQRjSOAdH32KW0ce63tG1D3VYScIgxS', 'partner', '(11) 97777-0003', 1, 'pt-BR');
-
-INSERT INTO user_cars (user_id, car_id) VALUES (3, 1);
 
 INSERT INTO locations (name, address, city, state, zip_code, phone, is_active) VALUES
 ('Matriz Paulista', 'Av. Paulista, 1000', 'São Paulo', 'SP', '01310-100', '(11) 3000-1000', 1),
@@ -21,6 +20,8 @@ INSERT INTO cars (license_plate, brand, model, year, color, color_hex, category,
 ('MNO3H45', 'Fiat', 'Strada', 2021, 'Vermelho', '#C41E3A', 'truck', 2, 'manual', 'flex', 129.00, 'maintenance', 2, 45000, 380.00, 70.00, 40.00, 450.00, 0.00, NULL, 'Revisão programada'),
 ('PQR6I78', 'Volkswagen', 'T-Cross', 2024, 'Cinza', '#6B7280', 'suv', 5, 'automatic', 'flex', 249.00, 'available', 3, 3000, 520.00, 100.00, 70.00, 100.00, 0.00, NULL, NULL),
 ('STU9J01', 'Renault', 'Kwid', 2023, 'Laranja', '#EA580C', 'economy', 5, 'manual', 'flex', 99.90, 'inactive', 1, 15000, 280.00, 40.00, 40.00, 80.00, 0.00, NULL, NULL);
+
+INSERT INTO user_cars (user_id, car_id) VALUES (3, 1);
 
 INSERT INTO customers (type, full_name, document, email, phone, address, city, state, zip_code, created_by, notes) VALUES
 ('individual', 'João da Silva', '12345678901', 'joao@email.com', '(11) 91111-1111', 'Rua A, 10', 'São Paulo', 'SP', '01000-000', 2, NULL),

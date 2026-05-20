@@ -25,6 +25,14 @@ final class Location
         return $row ?: null;
     }
 
+    public static function findActive(int $id): ?array
+    {
+        $stmt = Database::pdo()->prepare('SELECT * FROM locations WHERE id = ? AND is_active = 1');
+        $stmt->execute([$id]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
     public static function create(array $d): int
     {
         $stmt = Database::pdo()->prepare(

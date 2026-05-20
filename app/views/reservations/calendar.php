@@ -36,7 +36,7 @@
     </div>
 </div>
 <div id="calendarRoot" class="card mt calendar-root"></div>
-<script>
+<script<?= CspNonce::attr() ?>>
 window.__CAL = { eventsUrl: <?= json_encode(Router::url('/api/calendar/events'), JSON_THROW_ON_ERROR) ?> };
 </script>
 <script src="<?= htmlspecialchars(Router::url('/js/calendar.js'), ENT_QUOTES, 'UTF-8') ?>" defer></script>

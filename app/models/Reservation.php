@@ -76,11 +76,16 @@ final class Reservation
 
     public static function nextCode(): string
     {
+        return self::nextCodeLocked(Database::pdo());
+    }
+
+    private static function nextCodeLocked(PDO $pdo): string
+    {
         $year = (int) date('Y');
-        $stmt = Database::pdo()->prepare(
-            "SELECT code FROM reservations WHERE code LIKE ? ORDER BY id DESC LIMIT 1"
-        );
         $prefix = 'TRC-' . $year . '-';
+        $stmt = $pdo->prepare(
+            "SELECT code FROM reservations WHERE code LIKE ? ORDER BY id DESC LIMIT 1 FOR UPDATE"
+        );
         $stmt->execute([$prefix . '%']);
         $last = $stmt->fetchColumn();
         $n = 1;
@@ -91,7 +96,7 @@ final class Reservation
     }
 
     /**
-     * @param array<string, mixed> $pick Return assoc with pickup/return datetimes as strings Y-m-d H:i:s
+     * Verifica sobreposição de intervalos para o mesmo veículo.
      */
     public static function hasConflict(
         int $carId,
@@ -134,6 +139,163 @@ final class Reservation
         return (int) Database::pdo()->lastInsertId();
     }
 
+    /**
+     * Cria reserva com verificação atómica de conflito (evita race condition).
+     *
+     * @return int|false ID criado ou false se houver conflito / carro indisponível
+     */
+    public static function createAtomic(array $d): int|false
+    {
+        $pdo = Database::pdo();
+        $pdo->beginTransaction();
+        try {
+            $lock = $pdo->prepare('SELECT id FROM cars WHERE id = ? AND deleted_at IS NULL FOR UPDATE');
+            $lock->execute([$d['car_id']]);
+            if (!$lock->fetch()) {
+                $pdo->rollBack();
+                return false;
+            }
+            if (self::hasConflict(
+                $d['car_id'],
+                $d['pickup_date'],
+                $d['pickup_time'],
+                $d['return_date'],
+                $d['return_time'],
+                null
+            )) {
+                $pdo->rollBack();
+                return false;
+            }
+            if (empty($d['code'])) {
+                $d['code'] = self::nextCodeLocked($pdo);
+            }
+            $id = self::create($d);
+            self::refreshCarAvailability($pdo, (int) $d['car_id']);
+            $pdo->commit();
+            return $id;
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * @return bool false se houver conflito
+     */
+    public static function updateAtomic(int $id, array $d): bool
+    {
+        $pdo = Database::pdo();
+        $pdo->beginTransaction();
+        try {
+            $prev = $pdo->prepare('SELECT car_id FROM reservations WHERE id = ? FOR UPDATE');
+            $prev->execute([$id]);
+            $prevRow = $prev->fetch();
+            $oldCarId = $prevRow ? (int) $prevRow['car_id'] : (int) $d['car_id'];
+
+            $lock = $pdo->prepare('SELECT id FROM cars WHERE id = ? AND deleted_at IS NULL FOR UPDATE');
+            $lock->execute([$d['car_id']]);
+            if (!$lock->fetch()) {
+                $pdo->rollBack();
+                return false;
+            }
+            if (self::hasConflict(
+                $d['car_id'],
+                $d['pickup_date'],
+                $d['pickup_time'],
+                $d['return_date'],
+                $d['return_time'],
+                $id
+            )) {
+                $pdo->rollBack();
+                return false;
+            }
+            self::update($id, $d);
+            self::refreshCarAvailability($pdo, (int) $d['car_id']);
+            if ($oldCarId !== (int) $d['car_id']) {
+                self::refreshCarAvailability($pdo, $oldCarId);
+            }
+            $pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * @return true|string true em sucesso ou chave de erro Lang
+     */
+    public static function transition(int $id, string $action): true|string
+    {
+        $pdo = Database::pdo();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare('SELECT * FROM reservations WHERE id = ? FOR UPDATE');
+            $stmt->execute([$id]);
+            $r = $stmt->fetch();
+            if (!$r) {
+                $pdo->rollBack();
+                return 'error.404_title';
+            }
+            $status = (string) $r['status'];
+            $carId = (int) $r['car_id'];
+            $newStatus = match ($action) {
+                'confirm' => $status === 'pending' ? 'confirmed' : null,
+                'activate' => $status === 'confirmed' ? 'active' : null,
+                'complete' => $status === 'active' ? 'completed' : null,
+                'cancel' => in_array($status, ['pending', 'confirmed', 'active'], true) ? 'cancelled' : null,
+                default => null,
+            };
+            if ($newStatus === null) {
+                $pdo->rollBack();
+                return 'reservation.invalid_transition';
+            }
+            if ($newStatus === 'completed') {
+                $upd = $pdo->prepare(
+                    'UPDATE reservations SET status = ?, actual_return_at = NOW() WHERE id = ?'
+                );
+                $upd->execute([$newStatus, $id]);
+            } else {
+                $upd = $pdo->prepare('UPDATE reservations SET status = ? WHERE id = ?');
+                $upd->execute([$newStatus, $id]);
+            }
+            self::refreshCarAvailability($pdo, $carId);
+            $pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    private static function refreshCarAvailability(PDO $pdo, int $carId): void
+    {
+        $carStmt = $pdo->prepare('SELECT status FROM cars WHERE id = ? AND deleted_at IS NULL');
+        $carStmt->execute([$carId]);
+        $car = $carStmt->fetch();
+        if (!$car) {
+            return;
+        }
+        $current = (string) $car['status'];
+        if (in_array($current, ['maintenance', 'inactive'], true)) {
+            return;
+        }
+        $cntStmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM reservations WHERE car_id = ? AND status = 'active'"
+        );
+        $cntStmt->execute([$carId]);
+        $active = (int) $cntStmt->fetchColumn();
+        $newStatus = $active > 0 ? 'rented' : 'available';
+        $upd = $pdo->prepare('UPDATE cars SET status = ? WHERE id = ?');
+        $upd->execute([$newStatus, $carId]);
+    }
+
     public static function update(int $id, array $d): void
     {
         $stmt = Database::pdo()->prepare(
@@ -149,8 +311,13 @@ final class Reservation
         ]);
     }
 
+    /** @deprecated Use transition() */
     public static function setStatus(int $id, string $status): void
     {
+        if ($status === 'cancelled') {
+            self::transition($id, 'cancel');
+            return;
+        }
         $stmt = Database::pdo()->prepare('UPDATE reservations SET status = ? WHERE id = ?');
         $stmt->execute([$status, $id]);
     }

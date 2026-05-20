@@ -59,6 +59,7 @@ CREATE TABLE cars (
   notes            TEXT,
   created_at       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at       DATETIME      NULL DEFAULT NULL,
   FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL
 );
 
@@ -78,12 +79,13 @@ CREATE TABLE customers (
   created_by    INT UNSIGNED,
   created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+  INDEX idx_customers_document (document)
 );
 
 CREATE TABLE reservations (
   id                  INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  code                VARCHAR(12)   NOT NULL UNIQUE,
+  code                VARCHAR(16)   NOT NULL UNIQUE,
   customer_id         INT UNSIGNED  NOT NULL,
   car_id              INT UNSIGNED  NOT NULL,
   operator_id         INT UNSIGNED  NOT NULL,
@@ -129,6 +131,48 @@ CREATE INDEX idx_reservations_dates  ON reservations(pickup_date, return_date);
 CREATE INDEX idx_reservations_car    ON reservations(car_id, status);
 CREATE INDEX idx_reservations_status ON reservations(status);
 CREATE INDEX idx_cars_status         ON cars(status);
+CREATE INDEX idx_cars_deleted        ON cars(deleted_at);
+
+CREATE TABLE leads (
+  id                    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  location_text         VARCHAR(240) NOT NULL,
+  start_date            DATE         NOT NULL,
+  end_date              DATE         NOT NULL,
+  same_location         TINYINT(1)   NOT NULL DEFAULT 1,
+  return_location_text  VARCHAR(240),
+  contact_name          VARCHAR(120),
+  contact_email         VARCHAR(180),
+  contact_phone         VARCHAR(30),
+  ip_hash               CHAR(64)     NOT NULL,
+  status                ENUM('new','contacted','converted','archived') NOT NULL DEFAULT 'new',
+  notes                 TEXT,
+  created_at            DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_leads_created (created_at),
+  INDEX idx_leads_status (status)
+);
+
+CREATE TABLE rate_limits (
+  id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  bucket_key   VARCHAR(128) NOT NULL,
+  hits         INT UNSIGNED NOT NULL DEFAULT 0,
+  window_start INT UNSIGNED NOT NULL,
+  UNIQUE KEY uk_rate_limits_bucket (bucket_key)
+);
+
+CREATE TABLE schema_migrations (
+  version    VARCHAR(64) NOT NULL PRIMARY KEY,
+  applied_at DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO schema_migrations (version) VALUES
+  ('001_initial_schema.sql'),
+  ('002_cars_monthly_expenses.sql'),
+  ('003_privacy_login_consent.sql'),
+  ('004_customers_attachment.sql'),
+  ('005_partner_role_user_cars.sql'),
+  ('006_leads_rate_limits_soft_delete.sql'),
+  ('007_reservation_code_length.sql'),
+  ('008_leads_contact.sql');
 
 CREATE TABLE user_cars (
   user_id    INT UNSIGNED NOT NULL,

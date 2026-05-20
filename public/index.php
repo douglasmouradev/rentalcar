@@ -32,6 +32,19 @@ if (($appCfg['env'] ?? 'production') === 'production') {
     }
     if ($missing !== []) {
         AppError::log(new RuntimeException('Env vars em falta: ' . implode(', ', $missing)));
+        http_response_code(503);
+        header('Content-Type: text/plain; charset=UTF-8');
+        echo 'Service misconfigured.';
+        exit;
+    }
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    if ($isHttps && !($appCfg['session_secure'] ?? false)) {
+        AppError::log(new RuntimeException('SESSION_SECURE deve ser true em produção com HTTPS'));
+        http_response_code(503);
+        header('Content-Type: text/plain; charset=UTF-8');
+        echo 'Service misconfigured.';
+        exit;
     }
 }
 

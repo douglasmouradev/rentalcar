@@ -7,15 +7,18 @@ final class CustomerController
     public function index(): void
     {
         PartnerForbiddenMiddleware::handle();
+        $q = trim((string) ($_GET['q'] ?? ''));
         $page = Pagination::currentPage();
         $perPage = Pagination::perPage();
-        $p = Customer::paginated($page, $perPage);
+        $p = Customer::paginated($page, $perPage, $q !== '' ? $q : null);
+        $listQuery = $q !== '' ? ['q' => $q] : [];
         View::render('customers/index', [
             'title' => Lang::get('nav.customers'),
             'customers' => $p['rows'],
+            'search' => $q,
             'pagination' => $p,
             'paginationBase' => Router::url('/customers'),
-            'listQuery' => [],
+            'listQuery' => $listQuery,
         ], 'main');
     }
 
@@ -93,6 +96,32 @@ final class CustomerController
         exit;
     }
 
+    public function attachment(string $id): void
+    {
+        PartnerForbiddenMiddleware::handle();
+        $c = Customer::find((int) $id);
+        if (!$c || empty($c['attachment_path'])) {
+            http_response_code(404);
+            return;
+        }
+        $path = CustomerAttachment::filesystemPath((string) $c['attachment_path']);
+        if ($path === null) {
+            http_response_code(404);
+            return;
+        }
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->file($path) ?: 'application/octet-stream';
+        $name = basename($path);
+        header('Content-Type: ' . $mime);
+        header('Content-Disposition: attachment; filename="' . rawurlencode($name) . '"');
+        header('Content-Length: ' . (string) filesize($path));
+        header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: private, no-store, no-cache, must-revalidate');
+        header('Pragma: no-cache');
+        readfile($path);
+        exit;
+    }
+
     /** @param array<string, mixed> $post */
     private function sanitize(array $post): array
     {
@@ -154,20 +183,10 @@ final class CustomerController
             return false;
         }
 
-        // Remove anexo anterior, se existir
         if (!empty($existing['attachment_path'])) {
-            $oldPath = $existing['attachment_path'];
-            if (str_starts_with($oldPath, Router::url('/'))) {
-                $rel = substr($oldPath, strlen(Router::url('/')));
-                $fs = BASE_PATH . '/' . ltrim($rel, '/');
-                if (is_file($fs)) {
-                    @unlink($fs);
-                }
-            }
+            CustomerAttachment::deleteFile((string) $existing['attachment_path']);
         }
 
-        // Expõe como URL relativo a partir da raiz pública
-        $publicPath = Router::url('/storage/customers/' . $name);
-        return $publicPath;
+        return CustomerAttachment::storeRelative($name);
     }
 }

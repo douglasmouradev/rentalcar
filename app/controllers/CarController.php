@@ -130,8 +130,14 @@ final class CarController
         }
         $old = Car::find((int) $id);
         if ($old) {
+            $active = Car::activeReservationCount((int) $id);
+            if ($active > 0) {
+                Flash::error(Lang::get('car.delete_has_reservations'));
+                header('Location: ' . Router::url('/cars/' . $id));
+                exit;
+            }
             Audit::log(Auth::id(), 'delete', 'car', (int) $id, $old, null);
-            Car::delete((int) $id);
+            Car::softDelete((int) $id);
             Flash::success(Lang::get('flash.deleted'));
         }
         header('Location: ' . Router::url('/cars'));

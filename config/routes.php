@@ -8,8 +8,11 @@ return [
     'GET:/privacidade' => ['LegalController', 'privacy'],
     'GET:/termos' => ['LegalController', 'terms'],
 
+    'GET:/health' => ['HealthController', 'index'],
+
     'GET:/robots.txt' => ['RobotsController', 'index'],
     'GET:/sitemap.xml' => ['SitemapController', 'index'],
+    'GET:/.well-known/security.txt' => ['SecurityTxtController', 'index'],
     'POST:/lead' => ['LeadController', 'submit'],
 
     'GET:/login' => ['AuthController', 'loginForm'],
@@ -31,6 +34,11 @@ return [
     'POST:/customers' => ['CustomerController', 'create', 'auth' => true],
     'GET:/customers/{id}/edit' => ['CustomerController', 'editForm', 'auth' => true],
     'POST:/customers/{id}/update' => ['CustomerController', 'update', 'auth' => true],
+    'GET:/customers/{id}/attachment' => ['CustomerController', 'attachment', 'auth' => true],
+
+    'GET:/leads' => ['LeadsController', 'index', 'auth' => true, 'role' => 'owner'],
+    'POST:/leads/{id}/status' => ['LeadsController', 'updateStatus', 'auth' => true, 'role' => 'owner'],
+    'POST:/leads/{id}/convert' => ['LeadsController', 'convert', 'auth' => true, 'role' => 'owner'],
 
     'GET:/locations' => ['LocationController', 'index', 'auth' => true, 'role' => 'owner'],
     'GET:/locations/create' => ['LocationController', 'createForm', 'auth' => true, 'role' => 'owner'],
@@ -46,6 +54,9 @@ return [
     'GET:/reservations/{id}/edit' => ['ReservationController', 'editForm', 'auth' => true],
     'POST:/reservations/{id}/update' => ['ReservationController', 'update', 'auth' => true],
     'POST:/reservations/{id}/cancel' => ['ReservationController', 'cancel', 'auth' => true],
+    'POST:/reservations/{id}/confirm' => ['ReservationController', 'confirm', 'auth' => true],
+    'POST:/reservations/{id}/activate' => ['ReservationController', 'activate', 'auth' => true],
+    'POST:/reservations/{id}/complete' => ['ReservationController', 'complete', 'auth' => true],
 
     'GET:/users' => ['UserController', 'index', 'auth' => true, 'role' => 'owner'],
     'GET:/users/create' => ['UserController', 'createForm', 'auth' => true, 'role' => 'owner'],

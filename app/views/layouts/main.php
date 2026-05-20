@@ -27,7 +27,7 @@ $locale = Lang::locale();
     <?php if ($logged): ?>
     <aside class="sidebar" id="sidebar">
         <div class="brand">
-            <img src="<?= htmlspecialchars(Router::url('/assets/img/logo.jpeg'), ENT_QUOTES, 'UTF-8') ?>" alt="" class="brand-logo" width="40" height="40">
+            <img src="<?= htmlspecialchars(Router::url('/assets/img/logo.jpeg'), ENT_QUOTES, 'UTF-8') ?>" alt="<?= Lang::e('app.name') ?>" class="brand-logo" width="40" height="40">
             <div>
                 <div class="brand-title"><?= Lang::e('app.name') ?></div>
                 <div class="brand-sub"><?= Lang::e('app.tagline') ?></div>
@@ -45,6 +45,7 @@ $locale = Lang::locale();
                 <a class="nav-link" href="<?= Router::url('/locations') ?>"><?= Lang::e('nav.locations') ?></a>
                 <a class="nav-link" href="<?= Router::url('/users') ?>"><?= Lang::e('nav.users') ?></a>
                 <a class="nav-link" href="<?= Router::url('/reports') ?>"><?= Lang::e('nav.reports') ?></a>
+                <a class="nav-link" href="<?= Router::url('/leads') ?>"><?= Lang::e('nav.leads') ?></a>
                 <a class="nav-link" href="<?= Router::url('/audit') ?>"><?= Lang::e('nav.audit') ?></a>
             <?php endif; ?>
         </nav>
@@ -95,7 +96,7 @@ $locale = Lang::locale();
     </div>
 </div>
 <?php include APP_PATH . '/views/partials/cookie_notice.php'; ?>
-<script>window.APP_BASE_URL = <?= json_encode(rtrim(Router::url('/'), '/'), JSON_THROW_ON_ERROR) ?>;</script>
+<script<?= CspNonce::attr() ?>>window.APP_BASE_URL = <?= json_encode(rtrim(Router::url('/'), '/'), JSON_THROW_ON_ERROR) ?>;</script>
 <script src="<?= htmlspecialchars(Router::url('/js/lang-switcher.js'), ENT_QUOTES, 'UTF-8') ?>" defer></script>
 <script src="<?= htmlspecialchars(Router::url('/js/cookie-notice.js'), ENT_QUOTES, 'UTF-8') ?>" defer></script>
 <script src="<?= htmlspecialchars(Router::url('/js/app.js'), ENT_QUOTES, 'UTF-8') ?>" defer></script>

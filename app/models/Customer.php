@@ -38,14 +38,24 @@ final class Customer
     /**
      * @return array{rows: array<int, array<string, mixed>>, total: int, page: int, perPage: int, totalPages: int}
      */
-    public static function paginated(int $page, int $perPage): array
+    public static function paginated(int $page, int $perPage, ?string $q = null): array
     {
-        $total = (int) Database::pdo()->query('SELECT COUNT(*) FROM customers')->fetchColumn();
+        $where = '';
+        $params = [];
+        if ($q !== null && trim($q) !== '') {
+            $like = '%' . trim($q) . '%';
+            $where = ' WHERE full_name LIKE ? OR document LIKE ? OR email LIKE ? OR phone LIKE ?';
+            $params = [$like, $like, $like, $like];
+        }
+        $stmt = Database::pdo()->prepare('SELECT COUNT(*) FROM customers' . $where);
+        $stmt->execute($params);
+        $total = (int) $stmt->fetchColumn();
         $meta = Pagination::meta($total, $page, $perPage);
         $stmt = Database::pdo()->prepare(
-            'SELECT * FROM customers ORDER BY full_name LIMIT ' . (int) $meta['perPage'] . ' OFFSET ' . (int) $meta['offset']
+            'SELECT * FROM customers' . $where . ' ORDER BY full_name LIMIT '
+            . (int) $meta['perPage'] . ' OFFSET ' . (int) $meta['offset']
         );
-        $stmt->execute();
+        $stmt->execute($params);
         return [
             'rows' => $stmt->fetchAll(),
             'total' => $meta['total'],
@@ -53,6 +63,13 @@ final class Customer
             'perPage' => $meta['perPage'],
             'totalPages' => $meta['totalPages'],
         ];
+    }
+
+    public static function reservationCount(int $id): int
+    {
+        $stmt = Database::pdo()->prepare('SELECT COUNT(*) FROM reservations WHERE customer_id = ?');
+        $stmt->execute([$id]);
+        return (int) $stmt->fetchColumn();
     }
 
     public static function create(array $d): int

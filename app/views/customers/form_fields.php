@@ -34,7 +34,7 @@
     <input class="input" id="customer-attachment" type="file" name="attachment" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.heic,.heif">
     <?php if (!empty($c['attachment_path'])): ?>
         <p class="help-text">
-            <a href="<?= htmlspecialchars((string) $c['attachment_path'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">
+            <a href="<?= htmlspecialchars(CustomerAttachment::downloadUrl((int) ($c['id'] ?? 0)), ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener noreferrer">
                 <?= Lang::e('customer.attachment_view') ?>
             </a>
         </p>

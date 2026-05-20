@@ -51,7 +51,7 @@ final class DashboardController
         $revenueStmt->execute([$monthStart, $monthEnd]);
         $revenueMonth = (float) $revenueStmt->fetchColumn();
 
-        $fleet = (int) $pdo->query('SELECT COUNT(*) FROM cars')->fetchColumn();
+        $fleet = (int) $pdo->query('SELECT COUNT(*) FROM cars WHERE deleted_at IS NULL')->fetchColumn();
         $activeRes = (int) $pdo->query("SELECT COUNT(*) FROM reservations WHERE status = 'active'")->fetchColumn();
 
         $occupancy = $fleet > 0 ? round(($activeRes / $fleet) * 100) : 0;
@@ -78,7 +78,7 @@ final class DashboardController
 
         $catQ = $pdo->prepare(
             "SELECT car.category, COALESCE(SUM(r.final_amount),0) AS total
-             FROM reservations r JOIN cars car ON car.id = r.car_id
+             FROM reservations r JOIN cars car ON car.id = r.car_id AND car.deleted_at IS NULL
              WHERE r.status IN ('confirmed','active','completed') AND r.pickup_date BETWEEN ? AND ?
              GROUP BY car.category"
         );
@@ -95,7 +95,7 @@ final class DashboardController
         )->fetchAll();
 
         $maintenance = $pdo->query(
-            "SELECT * FROM cars WHERE status = 'maintenance' ORDER BY updated_at DESC LIMIT 10"
+            "SELECT * FROM cars WHERE status = 'maintenance' AND deleted_at IS NULL ORDER BY updated_at DESC LIMIT 10"
         )->fetchAll();
 
         $myToday = [];

@@ -122,14 +122,12 @@
         div.className = 'suggest-item';
         div.textContent = `${c.full_name} — ${c.document}`;
         div.addEventListener('click', () => {
-          let opt = Array.from(custSel.options).find((o) => String(o.value) === String(c.id));
-          if (!opt) {
-            opt = document.createElement('option');
-            opt.value = c.id;
-            opt.textContent = `${c.full_name} — ${c.document}`;
-            custSel.appendChild(opt);
-          }
-          custSel.value = String(c.id);
+          custSel.innerHTML = '';
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = `${c.full_name} — ${c.document}`;
+          opt.selected = true;
+          custSel.appendChild(opt);
           custSuggest.style.display = 'none';
           custSearch.value = '';
         });
@@ -158,12 +156,20 @@
     const json = await res.json();
     if (!json.ok) return;
     const c = json.customer;
+    custSel.innerHTML = '';
     const opt = document.createElement('option');
     opt.value = c.id;
     opt.textContent = `${c.full_name} — ${c.document}`;
+    opt.selected = true;
     custSel.appendChild(opt);
-    custSel.value = String(c.id);
     modal?.classList.add('hidden');
+  });
+
+  form?.addEventListener('submit', (e) => {
+    if (!custSel?.value || custSel.value === '') {
+      e.preventDefault();
+      custSearch?.focus();
+    }
   });
 
   syncCar();

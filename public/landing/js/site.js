@@ -91,6 +91,10 @@
     document.querySelectorAll('[data-reveal]').forEach(function (el) {
       io.observe(el);
     });
+    document.querySelectorAll('[data-hen-split]').forEach(function (el) {
+      var section = el.closest('[data-reveal]');
+      io.observe(section || el);
+    });
   } else {
     document.querySelectorAll('[data-reveal]').forEach(function (el) {
       el.classList.add('is-inview');

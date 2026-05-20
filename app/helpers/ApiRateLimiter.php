@@ -4,39 +4,15 @@ declare(strict_types=1);
 
 /**
  * Limita chamadas à API autenticada por IP.
- *
- * Objectivo: evitar scraping agressivo ou abuso acidental de endpoints AJAX.
  */
 final class ApiRateLimiter
 {
-    private const MAX = 240;      // 240 pedidos
-    private const WINDOW = 300;   // em 5 minutos (~48/min)
+    private const MAX = 240;
+    private const WINDOW = 300;
 
-    private static function path(): string
+    private static function bucket(): string
     {
-        $dir = BASE_PATH . '/storage/logs';
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-        $ip = preg_replace('/[^a-fA-F0-9.:]/', '_', $_SERVER['REMOTE_ADDR'] ?? 'unknown');
-        return $dir . '/api_' . $ip . '.json';
-    }
-
-    private static function snapshot(): array
-    {
-        $p = self::path();
-        if (!is_readable($p)) {
-            return ['count' => 0, 'first_at' => time()];
-        }
-        $raw = file_get_contents($p);
-        $data = $raw ? json_decode($raw, true) : null;
-        if (!is_array($data) || !isset($data['count'], $data['first_at'])) {
-            return ['count' => 0, 'first_at' => time()];
-        }
-        return [
-            'count' => (int) $data['count'],
-            'first_at' => (int) $data['first_at'],
-        ];
+        return DbRateLimiter::clientBucket('api');
     }
 
     /**
@@ -44,19 +20,7 @@ final class ApiRateLimiter
      */
     public static function hit(): bool
     {
-        $p = self::path();
-        $now = time();
-        $snap = self::snapshot();
-
-        if ($now - $snap['first_at'] > self::WINDOW) {
-            $snap = ['count' => 0, 'first_at' => $now];
-        }
-
-        $snap['count']++;
-
-        file_put_contents($p, json_encode($snap), LOCK_EX);
-
-        return $snap['count'] <= self::MAX;
+        return DbRateLimiter::hit(self::bucket(), self::WINDOW) <= self::MAX;
     }
 
     /**
@@ -73,4 +37,3 @@ final class ApiRateLimiter
         exit;
     }
 }
-

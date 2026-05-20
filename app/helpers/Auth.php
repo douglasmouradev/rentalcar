@@ -75,18 +75,39 @@ final class Auth
         session_destroy();
     }
 
-    public static function refreshUserFromDb(): void
+    public static function ensureActive(): void
     {
+        if (!self::check()) {
+            return;
+        }
         $id = self::id();
         if ($id === null) {
             return;
         }
-        $stmt = Database::pdo()->prepare('SELECT id, name, email, role, lang_pref FROM users WHERE id = ? AND is_active = 1');
+        $stmt = Database::pdo()->prepare(
+            'SELECT id, name, email, role, lang_pref, is_active FROM users WHERE id = ?'
+        );
         $stmt->execute([$id]);
         $row = $stmt->fetch();
-        if ($row) {
-            self::login($row);
+        if (!$row || !(int) ($row['is_active'] ?? 0)) {
+            self::logout();
+            header('Location: ' . Router::url('/login'));
+            exit;
         }
+        $carIds = ($row['role'] ?? '') === 'partner' ? UserCar::carIdsForUser((int) $row['id']) : [];
+        $_SESSION['user'] = [
+            'id' => (int) $row['id'],
+            'name' => (string) $row['name'],
+            'email' => (string) $row['email'],
+            'role' => (string) $row['role'],
+            'lang_pref' => (string) ($row['lang_pref'] ?? 'pt-BR'),
+            'car_ids' => $carIds,
+        ];
+    }
+
+    public static function refreshUserFromDb(): void
+    {
+        self::ensureActive();
     }
 
     public static function partnerMayViewCar(int $carId): bool

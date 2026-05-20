@@ -42,7 +42,7 @@ declare(strict_types=1);
     </div>
     <button class="btn btn-primary" type="submit"><?= Lang::e('actions.save') ?></button>
 </form>
-<script>
+<script<?= CspNonce::attr() ?>>
 (function () {
   var role = document.getElementById('user-role-select');
   var wrap = document.getElementById('partner-cars-wrap');

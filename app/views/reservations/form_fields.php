@@ -2,9 +2,10 @@
 declare(strict_types=1);
 /** @var array<int,array<string,mixed>> $cars */
 /** @var array<int,array<string,mixed>> $locations */
-/** @var array<int,array<string,mixed>> $customers */
+/** @var array<string,mixed>|null $selectedCustomer */
 /** @var array<string,mixed>|null $r */
 $rv = $r ?? [];
+$sel = $selectedCustomer ?? null;
 $slots = TimeHelper::slots30();
 $today = date('Y-m-d');
 $defaultRate = $rv['daily_rate'] ?? ($cars[0]['daily_rate'] ?? 0);
@@ -16,11 +17,13 @@ $defaultRate = $rv['daily_rate'] ?? ($cars[0]['daily_rate'] ?? 0);
         <div id="custSuggest" class="suggest"></div>
         <label class="label"><?= Lang::e('reservation.customer') ?></label>
         <select class="input" name="customer_id" id="customer_id" required>
-            <?php foreach ($customers as $c): ?>
-                <option value="<?= (int) $c['id'] ?>" <?= ((int) ($rv['customer_id'] ?? 0) === (int) $c['id']) ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($c['full_name'] . ' — ' . $c['document'], ENT_QUOTES, 'UTF-8') ?>
+            <?php if ($sel): ?>
+                <option value="<?= (int) $sel['id'] ?>" selected>
+                    <?= htmlspecialchars($sel['full_name'] . ' — ' . $sel['document'], ENT_QUOTES, 'UTF-8') ?>
                 </option>
-            <?php endforeach; ?>
+            <?php else: ?>
+                <option value="" disabled selected><?= Lang::e('reservation.customer_select') ?></option>
+            <?php endif; ?>
         </select>
         <button type="button" class="btn btn-ghost btn-sm" id="openQuickCust"><?= Lang::e('reservation.new_customer') ?></button>
     </div>

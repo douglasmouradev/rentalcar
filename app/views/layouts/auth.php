@@ -64,7 +64,7 @@ $locale = Lang::locale();
     </div>
 </div>
 <?php include APP_PATH . '/views/partials/cookie_notice.php'; ?>
-<script>window.APP_BASE_URL = <?= json_encode(rtrim(Router::url('/'), '/'), JSON_THROW_ON_ERROR) ?>;</script>
+<script<?= CspNonce::attr() ?>>window.APP_BASE_URL = <?= json_encode(rtrim(Router::url('/'), '/'), JSON_THROW_ON_ERROR) ?>;</script>
 <script src="<?= htmlspecialchars(Router::url('/js/cookie-notice.js'), ENT_QUOTES, 'UTF-8') ?>" defer></script>
 <script src="<?= htmlspecialchars(Router::url('/js/lang-switcher.js'), ENT_QUOTES, 'UTF-8') ?>" defer></script>
 </body>

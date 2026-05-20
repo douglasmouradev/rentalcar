@@ -23,6 +23,7 @@ final class RobotsController
         echo "Disallow: /users\n";
         echo "Disallow: /reports\n";
         echo "Disallow: /audit\n";
+        echo "Disallow: /leads\n";
         echo "Disallow: /api/\n";
         echo "\n";
         echo 'Sitemap: ' . $sitemap . "\n";

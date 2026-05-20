@@ -1,0 +1,8 @@
+parameters:
+    level: 2
+    bootstrapFiles:
+        - phpstan-bootstrap.php
+    paths:
+        - app/helpers
+        - app/models
+        - app/middleware

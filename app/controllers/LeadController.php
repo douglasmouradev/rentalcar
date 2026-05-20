@@ -10,6 +10,10 @@ final class LeadController
             header('Location: ' . Router::url('/') . '?lead=erro');
             exit;
         }
+        if (trim((string) ($_POST['website'] ?? '')) !== '') {
+            header('Location: ' . Router::url('/') . '?lead=1#frota');
+            exit;
+        }
         if (LeadRateLimiter::tooMany()) {
             header('Location: ' . Router::url('/') . '?lead=limite');
             exit;
@@ -20,8 +24,19 @@ final class LeadController
         $fim = trim((string) ($_POST['fim'] ?? ''));
         $mesmo = isset($_POST['mesmo_local']) ? '1' : '0';
         $localDevolucao = trim((string) ($_POST['local_devolucao'] ?? ''));
+        $contactName = trim((string) ($_POST['contact_name'] ?? ''));
+        $contactEmail = trim((string) ($_POST['contact_email'] ?? ''));
+        $contactPhone = trim((string) ($_POST['contact_phone'] ?? ''));
 
         if ($local === '' || strlen($local) > 240 || !self::validDate($inicio) || !self::validDate($fim)) {
+            header('Location: ' . Router::url('/') . '?lead=erro');
+            exit;
+        }
+        if ($contactName === '' || ($contactEmail === '' && $contactPhone === '')) {
+            header('Location: ' . Router::url('/') . '?lead=erro');
+            exit;
+        }
+        if ($contactEmail !== '' && !filter_var($contactEmail, FILTER_VALIDATE_EMAIL)) {
             header('Location: ' . Router::url('/') . '?lead=erro');
             exit;
         }
@@ -31,7 +46,6 @@ final class LeadController
                 exit;
             }
         } else {
-            // Para leads antigos ou quando não é necessário outro local, normaliza com o mesmo local
             $localDevolucao = $local;
         }
         if (strcmp($inicio, $fim) > 0) {
@@ -39,6 +53,43 @@ final class LeadController
             exit;
         }
 
+        $ipHash = hash('sha256', (string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+
+        try {
+            Lead::create([
+                'location_text' => $local,
+                'start_date' => $inicio,
+                'end_date' => $fim,
+                'same_location' => (int) $mesmo,
+                'return_location_text' => $localDevolucao,
+                'contact_name' => $contactName,
+                'contact_email' => $contactEmail ?: null,
+                'contact_phone' => $contactPhone ?: null,
+                'ip_hash' => $ipHash,
+                'status' => 'new',
+            ]);
+        } catch (Throwable $e) {
+            AppError::log($e);
+            self::appendJsonlFallback($local, $inicio, $fim, $mesmo, $localDevolucao, $ipHash, $contactName, $contactEmail, $contactPhone);
+        }
+
+        LeadRateLimiter::hit();
+
+        header('Location: ' . Router::url('/') . '?lead=1#frota');
+        exit;
+    }
+
+    private static function appendJsonlFallback(
+        string $local,
+        string $inicio,
+        string $fim,
+        string $mesmo,
+        string $localDevolucao,
+        string $ipHash,
+        string $contactName = '',
+        string $contactEmail = '',
+        string $contactPhone = ''
+    ): void {
         $dir = BASE_PATH . '/storage/leads';
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
@@ -50,14 +101,12 @@ final class LeadController
             'fim' => $fim,
             'mesmo_local' => $mesmo,
             'local_devolucao' => $localDevolucao,
-            'ip_hash' => hash('sha256', (string) ($_SERVER['REMOTE_ADDR'] ?? '')),
+            'contact_name' => $contactName,
+            'contact_email' => $contactEmail,
+            'contact_phone' => $contactPhone,
+            'ip_hash' => $ipHash,
         ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . "\n";
         file_put_contents($dir . '/leads.jsonl', $line, FILE_APPEND | LOCK_EX);
-
-        LeadRateLimiter::hit();
-
-        header('Location: ' . Router::url('/') . '?lead=1#frota');
-        exit;
     }
 
     private static function validDate(string $d): bool

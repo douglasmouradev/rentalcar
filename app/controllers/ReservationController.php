@@ -38,12 +38,14 @@ final class ReservationController
         $cars = Auth::isOwner()
             ? Car::search([])
             : Car::search(['status' => 'available']);
+        $prefill = $_SESSION['reservation_prefill'] ?? null;
+        unset($_SESSION['reservation_prefill']);
         View::render('reservations/create', [
             'title' => Lang::get('reservation.create'),
             'cars' => $cars,
             'locations' => Location::allActive(),
-            'customers' => Customer::all(),
-            'reservation' => null,
+            'selectedCustomer' => null,
+            'reservation' => is_array($prefill) ? $prefill : null,
         ], 'main');
     }
 
@@ -55,22 +57,20 @@ final class ReservationController
             header('Location: ' . Router::url('/reservations/create'));
             exit;
         }
-        $d = $this->normalize($_POST);
-        if (Reservation::hasConflict(
-            $d['car_id'],
-            $d['pickup_date'],
-            $d['pickup_time'],
-            $d['return_date'],
-            $d['return_time'],
-            null
-        )) {
+        $validated = ReservationValidator::validate($_POST, Auth::isOwner());
+        if (!$validated['ok']) {
+            Flash::error(Lang::get($validated['error'] ?? 'flash.error'));
+            header('Location: ' . Router::url('/reservations/create'));
+            exit;
+        }
+        $d = $validated['data'];
+        $d['operator_id'] = Auth::id();
+        $id = Reservation::createAtomic($d);
+        if ($id === false) {
             Flash::error(Lang::get('reservation.conflict'));
             header('Location: ' . Router::url('/reservations/create'));
             exit;
         }
-        $d['code'] = Reservation::nextCode();
-        $d['operator_id'] = Auth::id();
-        $id = Reservation::create($d);
         Audit::log(Auth::id(), 'create', 'reservation', $id, null, $d);
         Flash::success(Lang::get('flash.saved'));
         header('Location: ' . Router::url('/reservations/' . $id));
@@ -106,7 +106,7 @@ final class ReservationController
             'r' => $r,
             'cars' => $cars,
             'locations' => Location::allActive(),
-            'customers' => Customer::all(),
+            'selectedCustomer' => Customer::find((int) $r['customer_id']),
         ], 'main');
     }
 
@@ -123,20 +123,18 @@ final class ReservationController
             http_response_code(404);
             return;
         }
-        $d = $this->normalize($_POST, (int) $id);
-        if (Reservation::hasConflict(
-            $d['car_id'],
-            $d['pickup_date'],
-            $d['pickup_time'],
-            $d['return_date'],
-            $d['return_time'],
-            (int) $id
-        )) {
+        $validated = ReservationValidator::validate($_POST, Auth::isOwner());
+        if (!$validated['ok']) {
+            Flash::error(Lang::get($validated['error'] ?? 'flash.error'));
+            header('Location: ' . Router::url('/reservations/' . $id . '/edit'));
+            exit;
+        }
+        $d = $validated['data'];
+        if (!Reservation::updateAtomic((int) $id, $d)) {
             Flash::error(Lang::get('reservation.conflict'));
             header('Location: ' . Router::url('/reservations/' . $id . '/edit'));
             exit;
         }
-        Reservation::update((int) $id, $d);
         Audit::log(Auth::id(), 'update', 'reservation', (int) $id, $old, $d);
         Flash::success(Lang::get('flash.saved'));
         header('Location: ' . Router::url('/reservations/' . $id));
@@ -144,6 +142,26 @@ final class ReservationController
     }
 
     public function cancel(string $id): void
+    {
+        $this->transition($id, 'cancel');
+    }
+
+    public function confirm(string $id): void
+    {
+        $this->transition($id, 'confirm');
+    }
+
+    public function activate(string $id): void
+    {
+        $this->transition($id, 'activate');
+    }
+
+    public function complete(string $id): void
+    {
+        $this->transition($id, 'complete');
+    }
+
+    private function transition(string $id, string $action): void
     {
         PartnerForbiddenMiddleware::handle();
         if (!Csrf::validate($_POST['_csrf'] ?? null)) {
@@ -156,53 +174,16 @@ final class ReservationController
             http_response_code(404);
             return;
         }
-        Reservation::setStatus((int) $id, 'cancelled');
-        Audit::log(Auth::id(), 'cancel', 'reservation', (int) $id, $old, ['status' => 'cancelled']);
+        $result = Reservation::transition((int) $id, $action);
+        if ($result !== true) {
+            Flash::error(Lang::get(is_string($result) ? $result : 'flash.error'));
+            header('Location: ' . Router::url('/reservations/' . $id));
+            exit;
+        }
+        Audit::log(Auth::id(), $action, 'reservation', (int) $id, $old, ['action' => $action]);
         Flash::success(Lang::get('flash.saved'));
-        header('Location: ' . Router::url('/reservations'));
+        header('Location: ' . Router::url('/reservations/' . $id));
         exit;
-    }
-
-    /** @param array<string, mixed> $post */
-    private function normalize(array $post, ?int $excludeId = null): array
-    {
-        $pickupDate = (string) ($post['pickup_date'] ?? '');
-        $returnDate = (string) ($post['return_date'] ?? '');
-        $pickupTime = (string) ($post['pickup_time'] ?? '09:00');
-        $returnTime = (string) ($post['return_time'] ?? '18:00');
-        if (strlen($pickupTime) === 5) {
-            $pickupTime .= ':00';
-        }
-        if (strlen($returnTime) === 5) {
-            $returnTime .= ':00';
-        }
-        $d1 = new DateTimeImmutable($pickupDate);
-        $d2 = new DateTimeImmutable($returnDate);
-        $totalDays = max(1, (int) $d1->diff($d2)->format('%a') + 1);
-        $daily = (float) ($post['daily_rate'] ?? 0);
-        $discount = Auth::isOwner() ? (float) ($post['discount'] ?? 0) : 0.0;
-        $totalAmount = round($daily * $totalDays, 2);
-        $final = max(0, round($totalAmount - $discount, 2));
-
-        return [
-            'customer_id' => (int) ($post['customer_id'] ?? 0),
-            'car_id' => (int) ($post['car_id'] ?? 0),
-            'pickup_location_id' => (int) ($post['pickup_location_id'] ?? 0),
-            'return_location_id' => (int) ($post['return_location_id'] ?? 0),
-            'pickup_date' => $pickupDate,
-            'pickup_time' => $pickupTime,
-            'return_date' => $returnDate,
-            'return_time' => $returnTime,
-            'daily_rate' => $daily,
-            'total_days' => $totalDays,
-            'total_amount' => $totalAmount,
-            'discount' => $discount,
-            'final_amount' => $final,
-            'status' => (string) ($post['status'] ?? 'pending'),
-            'payment_status' => (string) ($post['payment_status'] ?? 'unpaid'),
-            'payment_method' => ($post['payment_method'] ?? '') !== '' ? (string) $post['payment_method'] : null,
-            'notes' => trim((string) ($post['notes'] ?? '')) ?: null,
-        ];
     }
 
     private function canAccessReservation(array $r): bool
